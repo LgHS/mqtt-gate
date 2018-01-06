@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package be.lghs.gate.proto;
+
+// lghs/gate/{id}/open/request
+message GateOpenRequest {
+    uint64 cardId = 1;
+    uint64 tokenLow = 2;
+    uint64 tokenHigh = 3;
+    bytes pin = 4;
+}
+
+// lghs/gate/{id}/open/response
+message GateOpenResponse {
+    uint64 cardId = 1;
+    bool ok = 2;
+}
