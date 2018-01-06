@@ -51,7 +51,6 @@ void printfln_P(const char *fmt, ...) {
 
 
 MqttClient *mqtt = NULL;
-EthernetClient network;
 
 // ============== Object to supply system functions ================================
 class System: public MqttClient::System {
@@ -78,7 +77,7 @@ void setup() {
   // Setup MqttClient
   MqttClient::System *mqttSystem = new System;
   MqttClient::Logger *mqttLogger = new MqttClient::LoggerImpl<HardwareSerial>(Serial);
-  MqttClient::Network * mqttNetwork = new MqttClient::NetworkClientImpl<Client>(network, *mqttSystem);
+  MqttClient::Network * mqttNetwork = new MqttClient::NetworkClientImpl<Client>(client, *mqttSystem);
   //// Make 128 bytes send buffer
   MqttClient::Buffer *mqttSendBuffer = new MqttClient::ArrayBuffer<128>();
   //// Make 128 bytes receive buffer
@@ -110,9 +109,9 @@ void printIPAddress()
 
 void Reconnect() {
   // Close connection if exists
-  network.stop();
+  client.stop();
   // Re-establish TCP connection with MQTT broker
-  network.connect(BROKER_URL, BROKER_PORT);
+  client.connect(BROKER_URL, BROKER_PORT);
   // Start new MQTT connection
   LOG_PRINTFLN("Connecting");
   MqttClient::ConnectResult connectResult;
