@@ -1,3 +1,11 @@
-## Dependencies
+# The arduino gate client
 
-+ [ArduinoMqtt](https://github.com/monstrenyatko/ArduinoMqtt)
+## Requirements
+
++ [PlatformIO](http://platformio.org/)
+
+
+## Commands
+
++ upload the code to the board with `pio run -t upload`
++ read the output with `pio device monitor`
