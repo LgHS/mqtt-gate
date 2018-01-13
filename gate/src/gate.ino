@@ -177,6 +177,6 @@ void loop() {
     });
 
     // Idle for 30 seconds
-    mqtt->yield(30000L);
+    mqtt->yield(LOOP_IDLE);
   }
 }
