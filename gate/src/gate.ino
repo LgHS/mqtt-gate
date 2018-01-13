@@ -13,6 +13,7 @@
  */
 
 #include <Arduino.h>
+#include <MFRC522.h>
 #include <SPI.h>
 #include <Ethernet.h>
 
@@ -21,6 +22,10 @@ byte mac[] = {
 };
 
 EthernetClient client;
+
+#define SS_PIN 4 //FOR RFID SS PIN BECASUSE WE ARE USING BOTH ETHERNET SHIELD AND RS-522
+#define RST_PIN 9
+MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 
 // Enable MqttClient logs
