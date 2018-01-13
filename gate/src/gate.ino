@@ -71,7 +71,6 @@ void setup() {
     Serial.println("Failed to configure Ethernet using DHCP");
   } else {
     printIPAddress();
-
   }
 
   // Setup MqttClient
@@ -130,7 +129,7 @@ void Reconnect() {
   }
 }
 
-MqttClient::Message SendMqttMessage(char* topic, char* bytes, unsigned length) {
+MqttClient::Message SendMqttMessage(char* topic, uint8_t* bytes, unsigned length) {
   MqttClient::Message message;
   message.qos = MqttClient::QOS0;
   message.retained = false;
@@ -174,7 +173,7 @@ void loop() {
       1, // uint64_t cardId;
       1, // uint64_t tokenLow;
       1, // uint64_t tokenHigh;
-      1  // pb_callback_t pin;
+      0  // pb_callback_t pin;
     });
 
     // Idle for 30 seconds
