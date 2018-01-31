@@ -30,6 +30,7 @@
 typedef be_lghs_gate_proto_GateOpenRequest GateOpenRequest;
 
 
+bool stuff_is_broken_abort_mission = false;
 
 byte mac[] = {
   0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02
@@ -68,45 +69,57 @@ public:
 
 // ============== Setup all objects ============================================
 void setup() {
-
   // Setup hardware serial for logging
   Serial.begin(9600);
   while (!Serial);
 
-  LOG_PRINTFLN("wheee");
-  // delay(15000L);
+  LOG_PRINTFLN("setting up SPI");
+  SPI.begin();
 
-  if (Ethernet.begin(mac) == 0) {
-    LOG_PRINTFLN("Failed to configure Ethernet using DHCP");
-  } else {
-    PrintIpAddress();
-  }
+  // LOG_PRINTFLN("setting up Ethernet");
+  // if (Ethernet.begin(mac) == 0) {
+  //   LOG_PRINTFLN("Failed to configure Ethernet using DHCP");
+  //   // @Beep
+  //   stuff_is_broken_abort_mission = true;
+  //   return;
+  // }
+  // PrintIpAddress();
+
+  LOG_PRINTFLN("sizeof(unsigned long): %d, sizeof(uint64_t): %d",
+    sizeof(unsigned long), sizeof(uint64_t));
 
   LOG_PRINTFLN("setting up rfid");
   mfrc522.PCD_Init();   // Init MFRC522
-  mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
-  LOG_PRINTFLN("Scan PICC to see UID, SAK, type, and data blocks...");
 
-  LOG_PRINTFLN("setting up mqtt");
-  // Setup MqttClient
-  MqttClient::System *mqttSystem = new System;
-  MqttClient::Logger *mqttLogger = new MqttClient::LoggerImpl<HardwareSerial>(Serial);
-  MqttClient::Network * mqttNetwork = new MqttClient::NetworkClientImpl<Client>(client, *mqttSystem);
-  //// Make 128 bytes send buffer
-  MqttClient::Buffer *mqttSendBuffer = new MqttClient::ArrayBuffer<128>();
-  //// Make 128 bytes receive buffer
-  MqttClient::Buffer *mqttRecvBuffer = new MqttClient::ArrayBuffer<128>();
-  //// Allow up to 2 subscriptions simultaneously
-  MqttClient::MessageHandlers *mqttMessageHandlers = new MqttClient::MessageHandlersImpl<2>();
-  //// Configure client options
-  MqttClient::Options mqttOptions;
-  ////// Set command timeout to 10 seconds
-  mqttOptions.commandTimeoutMs = 10000;
-  //// Make client object
-  mqtt = new MqttClient (
-    mqttOptions, *mqttLogger, *mqttSystem, *mqttNetwork, *mqttSendBuffer,
-    *mqttRecvBuffer, *mqttMessageHandlers
-  );
+  byte v = mfrc522.PCD_ReadRegister(MFRC522::VersionReg);
+  if ((v == 0x00) || (v == 0xFF)) {
+    LOG_PRINTFLN("RFID is broken, aborting...");
+    // @Beep
+    stuff_is_broken_abort_mission = true;
+    return;
+  }
+  mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
+
+  // LOG_PRINTFLN("setting up mqtt");
+  // // Setup MqttClient
+  // MqttClient::System *mqttSystem = new System;
+  // MqttClient::Logger *mqttLogger = new MqttClient::LoggerImpl<HardwareSerial>(Serial);
+  // MqttClient::Network * mqttNetwork = new MqttClient::NetworkClientImpl<Client>(client, *mqttSystem);
+  // //// Make 128 bytes send buffer
+  // MqttClient::Buffer *mqttSendBuffer = new MqttClient::ArrayBuffer<128>();
+  // //// Make 128 bytes receive buffer
+  // MqttClient::Buffer *mqttRecvBuffer = new MqttClient::ArrayBuffer<128>();
+  // //// Allow up to 2 subscriptions simultaneously
+  // MqttClient::MessageHandlers *mqttMessageHandlers = new MqttClient::MessageHandlersImpl<2>();
+  // //// Configure client options
+  // MqttClient::Options mqttOptions;
+  // ////// Set command timeout to 10 seconds
+  // mqttOptions.commandTimeoutMs = 10000;
+  // //// Make client object
+  // mqtt = new MqttClient (
+  //   mqttOptions, *mqttLogger, *mqttSystem, *mqttNetwork, *mqttSendBuffer,
+  //   *mqttRecvBuffer, *mqttMessageHandlers
+  // );
   LOG_PRINTFLN("yay, it works");
 }
 
@@ -174,29 +187,55 @@ void SendGateOpenRequest(const GateOpenRequest& request) {
   }
 }
 
-uint64_t GetRfidUid(MFRC522::Uid* uid) {
-  if (uid->size > 8) {
-    return 0;
+uint64_t ByteArrayToUint64(uint8_t* bytes) {
+  return *reinterpret_cast<uint64_t*>(bytes);
+  // uint64_t res = 0;
+  // uint8_t* res_ptr = (uint8_t*) &res;
+  // for (size_t i = 0; i < 8; ++i, ++bytes, ++res_ptr) {
+  //   *res_ptr = *bytes;
+  // }
+  // return res;
+}
+
+MFRC522::StatusCode ReadBlock(uint8_t block, MFRC522::Uid* uid, uint8_t* buffer) {
+  MFRC522::MIFARE_Key key = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+  uint8_t internal_buffer[16 + 2];
+  uint8_t size = 18;
+  MFRC522::StatusCode status;
+
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, uid);
+  if (status != MFRC522::STATUS_OK) {
+    return status;
   }
 
-  // FIXME That's totally broken, Idk what I'm doing
-  uint64_t nuid = 0;
-  for (uint8_t i = 0; i < uid->size; ++i) {
-    nuid |= (uid->uidByte[i] << (8 * (uid->size - i - 1)));
-    // nuid |= (uid->uidByte[i] << (8 * i));
+  status = mfrc522.MIFARE_Read(block, internal_buffer, &size);
+  if (status != MFRC522::STATUS_OK) {
+    return status;
   }
-  return nuid;
+
+  memcpy(buffer, internal_buffer, 16);
+  return status;
+}
+
+void CleanupRfid(MFRC522::StatusCode status) {
+  if (status != MFRC522::STATUS_OK) {
+    Serial.print("RFID error: ");
+    Serial.println(mfrc522.GetStatusCodeName(status));
+  }
+  mfrc522.PCD_StopCrypto1();
 }
 
 // ============== Main loop ====================================================
 void loop() {
-  // Check connection status
-  if (!mqtt->isConnected()) {
-    Reconnect();
-    return;
+  if (stuff_is_broken_abort_mission) return;
 
-    // Add subscribe here if need
-  }
+  // Check connection status
+  // if (!mqtt->isConnected()) {
+  //   Reconnect();
+  //   return;
+
+  //   // Add subscribe here if need
+  // }
 
   // Look for new cards
   if (!mfrc522.PICC_IsNewCardPresent()) {
@@ -216,35 +255,33 @@ void loop() {
     case MFRC522::PICC_TYPE_MIFARE_4K:
       break;
     default:
-      // nope
+      // @Beep
       return;
   }
 
-  uint64_t nuid = GetRfidUid(uid);
+  // mfrc522.PICC_DumpToSerial(uid);
+  // return;
 
-  LOG_PRINTFLN("nuid: %lu", nuid);
-  if (nuid == 0) {
-    // @Beep
+  uint8_t buffer[16];
+  MFRC522::StatusCode status = ReadBlock(0, uid, buffer);
+  if (status != MFRC522::STATUS_OK) {
+    CleanupRfid(status);
     return;
   }
 
-//   uint8_t no_of_sectors = 0;
-//   switch (piccType) {
-//     case PICC_TYPE_MIFARE_MINI:
-//       no_of_sectors = 5;
-//       break;
+  Serial.print("Data (block = 0): ");
+  Serial.print(static_cast<unsigned long>(ByteArrayToUint64(buffer)), HEX);
+  Serial.print(" ");
+  Serial.print(static_cast<unsigned long>(ByteArrayToUint64(buffer) >> 4), HEX);
+  Serial.print("  ");
+  Serial.print(static_cast<unsigned long>(ByteArrayToUint64(buffer + 8)), HEX);
+  Serial.print(" ");
+  Serial.print(static_cast<unsigned long>(ByteArrayToUint64(buffer + 8) >> 4), HEX);
+  Serial.println();
 
-//     case PICC_TYPE_MIFARE_1K:
-//       no_of_sectors = 16;
-//       break;
+  CleanupRfid(status);
 
-//     case PICC_TYPE_MIFARE_4K:
-//       no_of_sectors = 40;
-//       break;
-
-//     default: // Should not happen. Ignore.
-//       break;
-// }
+  // Remember to call PCD_StopCrypto1() after communicating with the authenticated PICC - otherwise no new communications can start.
 
   // SendGateOpenRequest(GateOpenRequest {
   //   1, // uint64_t cardId;
@@ -257,3 +294,10 @@ void loop() {
   // mqtt->yield(LOOP_IDLE);
 }
 
+
+// What should happen
+// 459EF0C2 E9080400  62636465 66676869
+// What happened
+// C2F09E45 E9C2F09E  65646362 66656463
+// What happens
+// C2F09E45 9C2F09E4  65646362 66564636
