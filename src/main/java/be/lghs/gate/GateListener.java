@@ -8,17 +8,33 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.UUID;
 
 public class GateListener {
 
+    private static Path firstExisting(Path... paths) throws NoSuchFileException {
+        for (Path path : paths) {
+            if (Files.exists(path)) {
+                return path;
+            }
+        }
+        throw new NoSuchFileException(Arrays.toString(paths));
+    }
+
     private final MqttClient mqttClient;
 
     public GateListener() throws IOException, MqttException {
         Properties config = new Properties();
-        config.load(Files.newBufferedReader(Paths.get("/etc", "mqtt", "mqtt.properties")));
+        config.load(Files.newBufferedReader(firstExisting(
+            Paths.get("mqtt.properties"),
+            Paths.get(System.getProperty("user.home"), "mqtt.properties"),
+            Paths.get("/etc", "mqtt", "mqtt.properties")
+        )));
         String server = config.getProperty("server.url");
         String client = config.getProperty("client.id");
 
