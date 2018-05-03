@@ -2,9 +2,18 @@
 # -*- coding: utf8 -*-
 
 import time
-import OPi.GPIO as gpio
+import OPi.GPIO as GPIO
 import MFRC522
 import signal
+
+import ConfigParser
+
+configParser = ConfigParser.RawConfigParser()
+configFilePath = r'./config.txt'
+configParser.read(configFilePath)
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(3, GPIO.OUT)
 
 continue_reading = True
 
@@ -27,20 +36,28 @@ def main():
     mifare_reader = MFRC522.MFRC522()
 
     last_card = None
-    last_read = 0
+    last_rfid_read = 0
+    last_gpio_high = 0
+    gpio_is_high = False
 
     # This loop keeps checking for chips. If one is near it will get the UID and authenticate
     while continue_reading:
+        now = time.time()
+
+        if now - last_gpio_high > 3 and gpio_is_high:
+            last_gpio_high = now
+            gpio_is_high = False
+            GPIO.output(3, GPIO.LOW)
+
         (status, tag_type) = mifare_reader.MFRC522_Request(mifare_reader.PICC_REQIDL)
 
         if status != mifare_reader.MI_OK:
             continue
 
         (status, uid) = mifare_reader.MFRC522_Anticoll()
-        now = time.time()
 
-        if now - last_read < 1:
-            last_read = now
+        if now - last_rfid_read < 1:
+            last_rfid_read = now
             continue
 
         # If we have the UID, continue
@@ -54,8 +71,12 @@ def main():
         print uid
         print data
 
+        GPIO.output(3, GPIO.HIGH)
+        gpio_is_high = True
+
         last_card = uid
-        last_read = now
+        last_rfid_read = now
+        last_gpio_high = now
         mifare_reader.MFRC522_StopCrypto1()
 
 if __name__ == '__main__':
@@ -66,4 +87,4 @@ if __name__ == '__main__':
     try:
         main()
     finally:
-        gpio.cleanup()
+        GPIO.cleanup()
