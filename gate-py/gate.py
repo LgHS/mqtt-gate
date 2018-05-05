@@ -15,9 +15,11 @@ GPIO.output(3, GPIO.HIGH)
 
 continue_reading = True
 
-def end_read(signal,frame):
+
+def end_read(signal, frame):
     global continue_reading
     continue_reading = False
+
 
 def read_sector(mifare_reader, sector, key, uid):
     status = mifare_reader.MFRC522_Auth(mifare_reader.PICC_AUTHENT1A, sector, key, uid)
@@ -25,6 +27,7 @@ def read_sector(mifare_reader, sector, key, uid):
         return None
 
     return mifare_reader.MFRC522_Read(sector)
+
 
 def main():
     global continue_reading
@@ -35,7 +38,7 @@ def main():
 
     last_card = None
     last_rfid_read = 0
-    last_gpio_high = 0
+    last_gpio_high = 0remo
     gpio_is_high = False
 
     # This loop keeps checking for chips. If one is near it will get the UID and authenticate
@@ -53,6 +56,9 @@ def main():
             continue
 
         (status, uid) = mifare_reader.MFRC522_Anticoll()
+
+        if not uid:
+            continue
 
         if now - last_rfid_read < 1:
             last_rfid_read = now
@@ -75,12 +81,14 @@ def main():
             last_gpio_high = now
         mifare_reader.MFRC522_StopCrypto1()
 
+
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, end_read)
     signal.signal(signal.SIGTERM, end_read)
     signal.signal(signal.SIGQUIT, end_read)
 
-    try:
-        main()
-    finally:
-        GPIO.cleanup()
+    while continue_reading:
+        try:
+            main()
+        finally:
+            GPIO.cleanup()
