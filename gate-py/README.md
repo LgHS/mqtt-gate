@@ -1,5 +1,5 @@
 # Gate Py
 
-* `cp config.txt.dist config.txt`
-* Add card uids to config.txt
+* `cp uids.py.dist uids.py`
+* Add card uids to uids.py
 * `python gate.py`

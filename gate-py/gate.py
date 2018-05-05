@@ -5,15 +5,13 @@ import time
 import OPi.GPIO as GPIO
 import MFRC522
 import signal
+import json
 
-import ConfigParser
-
-configParser = ConfigParser.RawConfigParser()
-configFilePath = r'./config.txt'
-configParser.read(configFilePath)
+import uids
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(3, GPIO.OUT)
+GPIO.output(3, GPIO.HIGH)
 
 continue_reading = True
 
@@ -47,7 +45,7 @@ def main():
         if now - last_gpio_high > 3 and gpio_is_high:
             last_gpio_high = now
             gpio_is_high = False
-            GPIO.output(3, GPIO.LOW)
+            GPIO.output(3, GPIO.HIGH)
 
         (status, tag_type) = mifare_reader.MFRC522_Request(mifare_reader.PICC_REQIDL)
 
@@ -68,15 +66,13 @@ def main():
         mifare_reader.MFRC522_SelectTag(uid)
 
         (status, data, _) = read_sector(mifare_reader, 1, default_key, uid)
-        print uid
-        print data
 
-        GPIO.output(3, GPIO.HIGH)
-        gpio_is_high = True
-
-        last_card = uid
-        last_rfid_read = now
-        last_gpio_high = now
+        if " ".join(str(e) for e in uid) in uids.uids:
+            GPIO.output(3, GPIO.LOW)
+            gpio_is_high = True
+            last_card = uid
+            last_rfid_read = now
+            last_gpio_high = now
         mifare_reader.MFRC522_StopCrypto1()
 
 if __name__ == '__main__':
