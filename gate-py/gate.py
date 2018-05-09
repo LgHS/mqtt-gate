@@ -38,7 +38,7 @@ def main():
 
     last_card = None
     last_rfid_read = 0
-    last_gpio_high = 0remo
+    last_gpio_high = 0
     gpio_is_high = False
 
     # This loop keeps checking for chips. If one is near it will get the UID and authenticate
