@@ -107,8 +107,8 @@ class MFRC522:
 
   serNum = []
 
-  def __init__(self, dev='/dev/spidev1.0', spd=1000000):
-    spi.openSPI(device=dev,speed=spd)
+  def __init__(self, device='/dev/spidev1.0', speed=1000000):
+    spi.openSPI(device=device,speed=speed)
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(22, GPIO.OUT)
     GPIO.output(self.NRSTPD, 1)
