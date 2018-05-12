@@ -1,4 +1,5 @@
-[uids]
-uids = ["uid1",
-        "uid2",
-        "uid3"]
+uids = {
+    "uid1": "name",
+    "uid2": "name",
+    "uid3": "name",
+}

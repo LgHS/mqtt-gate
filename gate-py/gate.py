@@ -1,94 +1,61 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+# TODO
+# * systemctl enable gate (Install shit is missing)
+# * mqtt
+# * protobuf
+# * write mocks to be able to test without hardware
+# * thread the client to open the door on message
+
 import time
-import OPi.GPIO as GPIO
-import MFRC522
 import signal
 import json
 
+import gpio
+import rfid
 import uids
 
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(3, GPIO.OUT)
-GPIO.output(3, GPIO.HIGH)
+reader = rfid.RfidReader()
 
-continue_reading = True
+def shutdown(signal, frame):
+    reader.enabled = False
 
-
-def end_read(signal, frame):
-    global continue_reading
-    continue_reading = False
-
-
-def read_sector(mifare_reader, sector, key, uid):
-    status = mifare_reader.MFRC522_Auth(mifare_reader.PICC_AUTHENT1A, sector, key, uid)
-    if status != mifare_reader.MI_OK:
-        return None
-
-    return mifare_reader.MFRC522_Read(sector)
-
-
-def main():
-    global continue_reading
-
-    default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
-
-    mifare_reader = MFRC522.MFRC522()
-
-    last_card = None
-    last_rfid_read = 0
-    last_gpio_high = 0
-    gpio_is_high = False
+def main(door):
+    last_card_read = 0
 
     # This loop keeps checking for chips. If one is near it will get the UID and authenticate
-    while continue_reading:
-        now = time.time()
+    while reader.enabled:
+        if not reader.wait_for_card():
+            print('shutting down')
+            return
 
-        if now - last_gpio_high > 3 and gpio_is_high:
-            last_gpio_high = now
-            gpio_is_high = False
-            GPIO.output(3, GPIO.HIGH)
+        (status, data, _) = reader.read_sector(1)
 
-        (status, tag_type) = mifare_reader.MFRC522_Request(mifare_reader.PICC_REQIDL)
-
-        if status != mifare_reader.MI_OK:
+        formatted = " ".join(str(e) for e in reader.current_card_uid)
+        the_guy = uids.authorized[formatted]
+        if not the_guy:
+            print('unknown uid: %s' % formatted)
+            reader.release_card()
             continue
 
-        (status, uid) = mifare_reader.MFRC522_Anticoll()
+        door.unlock()
+        print('opening door for %s' % the_guy)
 
-        if not uid:
-            continue
+        reader.release_card()
 
-        if now - last_rfid_read < 1:
-            last_rfid_read = now
-            continue
+        time.sleep(1)
+        door.lock()
 
-        # If we have the UID, continue
-        if status != mifare_reader.MI_OK:
-            continue
-
-        # Select the scanned tag
-        mifare_reader.MFRC522_SelectTag(uid)
-
-        (status, data, _) = read_sector(mifare_reader, 1, default_key, uid)
-
-        if " ".join(str(e) for e in uid) in uids.uids:
-            GPIO.output(3, GPIO.LOW)
-            gpio_is_high = True
-            last_card = uid
-            last_rfid_read = now
-            last_gpio_high = now
-        mifare_reader.MFRC522_StopCrypto1()
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, end_read)
-    signal.signal(signal.SIGTERM, end_read)
-    signal.signal(signal.SIGQUIT, end_read)
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGQUIT, shutdown)
 
-    while continue_reading:
-        try:
-            main()
-        finally:
-            GPIO.cleanup()
+    while reader.enabled:
+        with gpio.Door() as door:
+            main(door)
+
+    print('shut down')
