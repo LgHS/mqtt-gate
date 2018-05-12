@@ -2,7 +2,6 @@
 # -*- coding: utf8 -*-
 
 # TODO
-# * systemctl enable gate (Install shit is missing)
 # * mqtt
 # * protobuf
 # * write mocks to be able to test without hardware
