@@ -1,0 +1,12 @@
+[Unit]
+Description=The gate driver
+After=network-online.target
+
+[Install]
+WantedBy=network-online.target
+
+[Service]
+Restart=on-abnormal
+WorkingDirectory=/root/OrangePiZeroMFRC522/MFRC522-python
+ExecStart=/root/OrangePiZeroMFRC522/MFRC522-python/bin/python3 /root/OrangePiZeroMFRC522/MFRC522-python/gate.py
+Environment=PYTHONUNBUFFERED=True
