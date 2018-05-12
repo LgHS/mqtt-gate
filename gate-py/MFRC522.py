@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 import OPi.GPIO as GPIO
@@ -342,32 +342,35 @@ class MFRC522:
     if not(status == self.MI_OK) or not(backLen == 4) or not((backData[0] & 0x0F) == 0x0A):
         status = self.MI_ERR
 
-    print str(backLen)+" backdata &0x0F == 0x0A "+str(backData[0]&0x0F)
+    if status != self.MI_OK:
+      return status
+
+    i = 0
+    buf = []
+    while i < 16:
+      buf.append(writeData[i])
+      i = i + 1
+    crc = self.CalulateCRC(buf)
+    buf.append(crc[0])
+    buf.append(crc[1])
+    (status, backData, backLen) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE,buf)
+    if not(status == self.MI_OK) or not(backLen == 4) or not((backData[0] & 0x0F) == 0x0A):
+      print("Error while writing")
     if status == self.MI_OK:
-        i = 0
-        buf = []
-        while i < 16:
-            buf.append(writeData[i])
-            i = i + 1
-        crc = self.CalulateCRC(buf)
-        buf.append(crc[0])
-        buf.append(crc[1])
-        (status, backData, backLen) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE,buf)
-        if not(status == self.MI_OK) or not(backLen == 4) or not((backData[0] & 0x0F) == 0x0A):
-            print "Error while writing"
-        if status == self.MI_OK:
-            print "Data written"
+      print("Data written")
+
+    return status
 
   def MFRC522_DumpClassic1K(self, key, uid):
     i = 0
     while i < 64:
-        status = self.MFRC522_Auth(self.PICC_AUTHENT1A, i, key, uid)
-        # Check if authenticated
-        if status == self.MI_OK:
-            self.MFRC522_Read(i)
-        else:
-            print "Authentication error"
-        i = i+1
+      status = self.MFRC522_Auth(self.PICC_AUTHENT1A, i, key, uid)
+      # Check if authenticated
+      if status != self.MI_OK:
+        return status
+
+      self.MFRC522_Read(i)
+      i = i + 1
 
   def MFRC522_Init(self):
     GPIO.output(self.NRSTPD, 1)
