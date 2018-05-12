@@ -2,6 +2,8 @@
 
 ## Setup
 
+The gate's code requires python 3.
+
 Generating the proto file:
 ```bash
 protoc --python_out=. --proto_path=.. ../gate.proto
@@ -10,19 +12,24 @@ protoc --python_out=. --proto_path=.. ../gate.proto
 
 Installing the required stuff
 ```bash
-python3 -m virtualenv -p python3 .
+python -m virtualenv -p python3 .
 source ./bin/activate
 pip install -r requirements
 
 cp uids.py.dist uids.py
+# don't forget to update it
 
 python gate.py
 ```
 
 
-## Deployement on temp network
+## Deployement through gingerbread (LGHS specific)
 
 ```bash
-scp *.py root@192.168.42.78:/root/OrangePiZeroMFRC522/MFRC522-python/ \
-    && ssh root@192.168.42.78 systemctl restart gate
+# Open the tunnel once
+ssh -fNL 8022:192.168.43.102:22 gingerbread
+
+
+scp -P8022 *.py root@localhost:/root/OrangePiZeroMFRC522/MFRC522-python/ \
+    && ssh -p8022 root@localhost systemctl restart gate
 ```
