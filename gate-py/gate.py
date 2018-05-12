@@ -33,7 +33,7 @@ def main(door):
         (status, data, _) = reader.read_sector(1)
 
         formatted = " ".join(str(e) for e in reader.current_card_uid)
-        the_guy = uids.authorized[formatted]
+        the_guy = uids.authorized.get(formatted)
         if not the_guy:
             print('unknown uid: %s' % formatted)
             reader.release_card()
