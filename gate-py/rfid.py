@@ -5,7 +5,7 @@ class RfidReader:
     DEFAULT_KEY = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
 
     def __init__(self):
-        self.mifare_reader = MFRC522.MFRC522(speed=100000)
+        self.mifare_reader = MFRC522.MFRC522()
         self.current_card_uid = None
         self.enabled = True
         self.last_session_end = 0

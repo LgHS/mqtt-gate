@@ -22,9 +22,6 @@ def shutdown(signal, frame):
     reader.enabled = False
 
 def main(door):
-    last_card_read = 0
-
-    # This loop keeps checking for chips. If one is near it will get the UID and authenticate
     while reader.enabled:
         if not reader.wait_for_card():
             print('shutting down')
@@ -53,6 +50,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGQUIT, shutdown)
+    signal.signal(signal.SIGPIPE, shutdown)
 
     while reader.enabled:
         with gpio.Door() as door:
