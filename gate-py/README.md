@@ -27,7 +27,7 @@ python gate.py
 
 ```bash
 # Open the tunnel once
-ssh -fNL 8022:192.168.43.102:22 gingerbread
+ssh -fNL 8022:gate-internal.lghs.space:22 gingerbread
 
 
 scp -P8022 *.py root@localhost:/root/OrangePiZeroMFRC522/MFRC522-python/ \
