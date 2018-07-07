@@ -7,8 +7,6 @@ import signal
 import time
 
 class MFRC522:
-  NRSTPD = 22
-
   MAX_LEN = 16
 
   PCD_IDLE       = 0x00
@@ -107,12 +105,24 @@ class MFRC522:
 
   serNum = []
 
-  def __init__(self, device='/dev/spidev1.0', speed=1000000):
+  def __init__(self, device='/dev/spidev1.0', speed=1000000, gpioPin=22):
     spi.openSPI(device=device,speed=speed)
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(22, GPIO.OUT)
-    GPIO.output(self.NRSTPD, 1)
+    GPIO.setup(gpioPin, GPIO.OUT)
+    GPIO.output(gpioPin, 1)
     self.MFRC522_Init()
+
+  def MFRC522_Init(self):
+    self.MFRC522_Reset();
+
+    self.Write_MFRC522(self.TModeReg, 0x8D)
+    self.Write_MFRC522(self.TPrescalerReg, 0x3E)
+    self.Write_MFRC522(self.TReloadRegL, 30)
+    self.Write_MFRC522(self.TReloadRegH, 0)
+
+    self.Write_MFRC522(self.TxAutoReg, 0x40)
+    self.Write_MFRC522(self.ModeReg, 0x3D)
+    self.AntennaOn()
 
   def MFRC522_Reset(self):
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
@@ -361,28 +371,4 @@ class MFRC522:
 
     return status
 
-  def MFRC522_DumpClassic1K(self, key, uid):
-    i = 0
-    while i < 64:
-      status = self.MFRC522_Auth(self.PICC_AUTHENT1A, i, key, uid)
-      # Check if authenticated
-      if status != self.MI_OK:
-        return status
 
-      self.MFRC522_Read(i)
-      i = i + 1
-
-  def MFRC522_Init(self):
-    GPIO.output(self.NRSTPD, 1)
-
-    self.MFRC522_Reset();
-
-
-    self.Write_MFRC522(self.TModeReg, 0x8D)
-    self.Write_MFRC522(self.TPrescalerReg, 0x3E)
-    self.Write_MFRC522(self.TReloadRegL, 30)
-    self.Write_MFRC522(self.TReloadRegH, 0)
-
-    self.Write_MFRC522(self.TxAutoReg, 0x40)
-    self.Write_MFRC522(self.ModeReg, 0x3D)
-    self.AntennaOn()
