@@ -3,6 +3,7 @@ package be.lghs.gate;
 import be.lghs.gate.proto.Gate;
 import com.google.protobuf.ByteString;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -26,6 +27,9 @@ public class GateListener {
         throw new NoSuchFileException(Arrays.toString(paths));
     }
 
+    private final String server;
+    private final String clientId;
+    private final String clientPassword;
     private final MqttClient mqttClient;
 
     public GateListener() throws IOException, MqttException {
@@ -35,15 +39,22 @@ public class GateListener {
             Paths.get(System.getProperty("user.home"), "mqtt.properties"),
             Paths.get("/etc", "mqtt", "mqtt.properties")
         )));
-        String server = config.getProperty("server.url");
-        String client = config.getProperty("client.id");
+        server = config.getProperty("server.url");
+        clientId = config.getProperty("client.id");
+        clientPassword = config.getProperty("client.password");
 
-        mqttClient = new MqttClient(server, client);
+        mqttClient = new MqttClient(server, clientId);
     }
 
     public void listen() throws MqttException {
         System.out.println("coucou");
-        mqttClient.connect();
+
+        MqttConnectOptions connectOptions = new MqttConnectOptions();
+        connectOptions.setServerURIs(new String[] { server });
+        connectOptions.setUserName(clientId);
+        connectOptions.setPassword(clientPassword.toCharArray());
+        mqttClient.connect(connectOptions);
+
         mqttClient.setCallback(Callback.from((topic, message) -> {
             if(!topic.equals("lghs/gate/1/open/request")) {
                 System.out.println("nope: " + topic);
