@@ -9,14 +9,12 @@ class Door:
         self._last_door_unlock = 0
 
     def __enter__(self):
-        print('setup')
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.THE_DOOR_PIN, GPIO.OUT)
         GPIO.output(self.THE_DOOR_PIN, GPIO.HIGH)
         return self
 
     def __exit__(self, exception_type, exception_val, trace):
-        print('cleanup')
         if not self._is_door_locked:
             self.lock()
 
