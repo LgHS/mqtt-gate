@@ -1,0 +1,7 @@
+server = {
+    'url': '',
+    'port': 1,
+    'password': '',
+    'tls': True,
+    'gate-id': 1,
+}

@@ -11,24 +11,25 @@ import json
 import signal
 import time
 import uuid
+import logging
 
 import gpio
 import rfid
-import uids
+import server
+import config
 
-def read_card(card, door):
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+def read_card(card, door, mqtt):
     if not card.auth_sector(1):
         print('couldn\'t auth to sector 1')
         return
 
     uid_bytes = bytes(card.uid)
-    the_guy = uids.authorized.get(uid_bytes)
-    if not the_guy:
-        print('unknown uid: %s' % card.uid)
-        return
-
     data = card.read_sector(1)
-    the_guy_token = the_guy['token']
+    # the_guy_token = the_guy['token']
     # if the_guy_token is None:
     #     if data != [0]*16:
     #         print('no token but data on card, skipping. %s' % data)
@@ -47,7 +48,7 @@ def read_card(card, door):
     #     return
 
     door.unlock()
-    print('opening door for %s' % the_guy['name'])
+    mqtt.door_open_request(uid_bytes, uuid.UUID(bytes=bytes(data)))
 
     time.sleep(2)
     door.lock()
@@ -66,14 +67,21 @@ if __name__ == '__main__':
 
     while reader.enabled:
         try:
-            with gpio.Door() as door:
+            with gpio.Door() as door, server.MqttClient(
+                    config.server['url'],
+                    config.server['port'],
+                    config.server['password'],
+                    config.server['gate_id'],
+                    config.server['tls']) as mqtt:
                 while reader.enabled:
                     with reader.wait_for_card() as card:
                         if not card:
                             break
 
-                        read_card(card, door)
+                        read_card(card, door, mqtt)
+        except rfid.ShutdownRequest:
+            pass
         except Exception as e:
-            print(e)
+            logger.exception(e)
 
     print('shut down')

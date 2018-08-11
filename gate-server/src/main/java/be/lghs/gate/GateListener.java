@@ -1,11 +1,12 @@
 package be.lghs.gate;
 
 import be.lghs.gate.proto.Gate;
-import com.google.protobuf.ByteString;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,10 +14,15 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
+import java.util.Set;
 
 public class GateListener {
+
+    private static final Logger log = LoggerFactory.getLogger(GateListener.class);
 
     private static Path firstExisting(Path... paths) throws NoSuchFileException {
         for (Path path : paths) {
@@ -27,13 +33,15 @@ public class GateListener {
         throw new NoSuchFileException(Arrays.toString(paths));
     }
 
+    private final Properties config;
     private final String server;
     private final String clientId;
     private final String clientPassword;
     private final MqttClient mqttClient;
+    private final Map<Long, String> users;
 
     public GateListener() throws IOException, MqttException {
-        Properties config = new Properties();
+        config = new Properties();
         config.load(Files.newBufferedReader(firstExisting(
             Paths.get("mqtt.properties"),
             Paths.get(System.getProperty("user.home"), "mqtt.properties"),
@@ -43,50 +51,56 @@ public class GateListener {
         clientId = config.getProperty("client.id");
         clientPassword = config.getProperty("client.password");
 
+        users = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : config.entrySet()) {
+            int dotIndex;
+            String propertyName = (String) entry.getKey();
+            if ((dotIndex = propertyName.indexOf(".")) < 0 || !propertyName.substring(0, dotIndex).equals("card")) {
+                continue;
+            }
+
+            users.put(Long.parseUnsignedLong(propertyName.substring(dotIndex + 1)), (String) entry.getValue());
+        }
+
         mqttClient = new MqttClient(server, clientId);
     }
 
     public void listen() throws MqttException {
-        System.out.println("coucou");
-
         MqttConnectOptions connectOptions = new MqttConnectOptions();
         connectOptions.setServerURIs(new String[] { server });
         connectOptions.setUserName(clientId);
         connectOptions.setPassword(clientPassword.toCharArray());
+        connectOptions.setAutomaticReconnect(true);
         mqttClient.connect(connectOptions);
 
         mqttClient.setCallback(Callback.from((topic, message) -> {
-            if(!topic.equals("lghs/gate/1/open/request")) {
-                System.out.println("nope: " + topic);
-                return;
+            // FIXME No token handling yet
+            if (!topic.equals("lghs/gate/1/open/request")) {
+                // TODO The logic is not the same for the internal and external gate
             }
 
             Gate.GateOpenRequest request = Gate.GateOpenRequest.parseFrom(message.getPayload());
-            System.out.println(request);
+            Gate.GateOpenResponse response;
+            String user;
+            if ((user = users.get(request.getCardId())) == null) {
+                response = Gate.GateOpenResponse.newBuilder()
+                    .setCardId(request.getCardId())
+                    .setOk(false)
+                    .build();
+            } else {
+                log.info("'{}' getting in ({})", user, topic);
 
-            System.out.println(new UUID(request.getTokenHigh(), request.getTokenLow()));
+                response = Gate.GateOpenResponse.newBuilder()
+                    .setCardId(request.getCardId())
+                    .setOk(true)
+                    .build();
+            }
 
-            Gate.GateOpenResponse response = Gate.GateOpenResponse.newBuilder()
-                .setCardId(request.getCardId())
-                .setOk(false)
-                .build();
-            mqttClient.publish("lghs/gate/1/open/response", new MqttMessage(response.toByteArray()));
-        }, Throwable::printStackTrace));
-
+            mqttClient.publish(
+                topic.replace("request", "response"),
+                new MqttMessage(response.toByteArray()));
+        }, e -> log.error("unexpected error", e)));
 
         mqttClient.subscribe("lghs/gate/+/open/request");
-
-        UUID token = UUID.randomUUID();
-        Gate.GateOpenRequest request = Gate.GateOpenRequest.newBuilder()
-            .setCardId(1)
-            .setTokenHigh(token.getMostSignificantBits())
-            .setTokenLow(token.getLeastSignificantBits())
-            .setPin(ByteString.copyFromUtf8("1234"))
-            .build();
-
-        mqttClient.publish("lghs/gate/1/open/request", new MqttMessage(request.toByteArray()));
-        mqttClient.publish("lghs/gate/2/open/request", new MqttMessage(request.toByteArray()));
-
-        System.out.println(token);
     }
 }

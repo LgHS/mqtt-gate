@@ -1,6 +1,9 @@
 import MFRC522
 import time
 
+class ShutdownRequest(Exception):
+    pass
+
 class RfidReader:
     def __init__(self):
         self.mifare_reader = MFRC522.MFRC522()
@@ -34,7 +37,7 @@ class RfidReader:
             bleh = self.mifare_reader.MFRC522_SelectTag(current_card_uid)
             return RfidCard(self, current_card_uid)
 
-        return None
+        raise ShutdownRequest()
 
 class RfidCard:
     DEFAULT_KEY = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
