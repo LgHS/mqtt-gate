@@ -15,10 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 public class GateListener {
 
@@ -48,8 +46,8 @@ public class GateListener {
             Paths.get("/etc", "mqtt", "mqtt.properties")
         )));
         server = config.getProperty("server.url");
-        clientId = config.getProperty("client.id");
-        clientPassword = config.getProperty("client.password");
+        clientId = config.getProperty("server.clientId");
+        clientPassword = config.getProperty("server.password");
 
         users = new HashMap<>();
         for (Map.Entry<Object, Object> entry : config.entrySet()) {
