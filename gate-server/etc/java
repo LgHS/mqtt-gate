@@ -1,0 +1,5 @@
+#!/bin/bash
+
+JAVA=java
+[[ -z "$JAVA_HOME" ]] || JAVA="$JAVA_HOME/bin/java"
+exec "$JAVA" "$@"

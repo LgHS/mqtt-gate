@@ -1,0 +1,19 @@
+[Unit]
+Description=Gate authorization server
+Requires=network.target
+;Requires=network.target postgresql.service
+;After=postgresql.service
+
+[Service]
+User=gate-server
+Group=gate-server
+Type=simple
+ExecStart=/opt/java -jar /opt/gate-server/gate-server.jar
+RestartSec=5
+Restart=on-failure
+PrivateTmp=yes
+EnvironmentFile=/opt/gate-server/gate-server.conf
+WorkingDirectory=/opt/gate-server
+
+[Install]
+WantedBy=multi-user.target
