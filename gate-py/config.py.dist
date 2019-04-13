@@ -5,3 +5,8 @@ server = {
     'tls': True,
     'gate-id': 1,
 }
+
+rfid = {
+    'spi-device': '/dev/spidev1.0',
+    'gpio-pin': 22
+}

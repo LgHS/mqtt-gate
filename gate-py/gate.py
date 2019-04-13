@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def read_card(card, door, mqtt):
+    print('reading card')
     if not card.auth_sector(1):
         print('couldn\'t auth to sector 1')
         return
@@ -55,7 +56,9 @@ def read_card(card, door, mqtt):
 
 
 if __name__ == '__main__':
-    reader = rfid.RfidReader()
+    reader = rfid.RfidReader(
+        config.rfid['spi-device'],
+        config.rfid['gpio-pin'])
 
     def shutdown(signal, frame):
         reader.enabled = False
@@ -71,7 +74,7 @@ if __name__ == '__main__':
                     config.server['url'],
                     config.server['port'],
                     config.server['password'],
-                    config.server['gate_id'],
+                    config.server['gate-id'],
                     config.server['tls']) as mqtt:
                 while reader.enabled:
                     with reader.wait_for_card() as card:

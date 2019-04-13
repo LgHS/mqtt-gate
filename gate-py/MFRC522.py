@@ -105,11 +105,11 @@ class MFRC522:
 
   serNum = []
 
-  def __init__(self, device='/dev/spidev1.0', speed=1000000, gpioPin=22):
-    spi.openSPI(device=device,speed=speed)
+  def __init__(self, device='/dev/spidev1.0', speed=1000000, gpio_pin=22):
+    self.device = spi.openSPI(device=device, speed=speed)
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(gpioPin, GPIO.OUT)
-    GPIO.output(gpioPin, 1)
+    GPIO.setup(gpio_pin, GPIO.OUT)
+    GPIO.output(gpio_pin, 1)
     self.MFRC522_Init()
 
   def MFRC522_Init(self):
@@ -129,11 +129,11 @@ class MFRC522:
 
   def Write_MFRC522(self, addr, val):
     value = ((addr << 1) & 0x7E, val)
-    spi.transfer(value)
+    spi.transfer(self.device, value)
 
   def Read_MFRC522(self, addr):
     value = (((addr << 1) & 0x7E) | 0x80, 0)
-    val = spi.transfer(value)
+    val = spi.transfer(self.device, value)
     return val[1]
 
   def SetBitMask(self, reg, mask):
@@ -228,13 +228,13 @@ class MFRC522:
 
     self.Write_MFRC522(self.BitFramingReg, 0x07)
 
-    TagType.append(reqMode);
-    (status,backData,backBits) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE, TagType)
+    TagType.append(reqMode)
+    (status, backData, backBits) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE, TagType)
 
-    if ((status != self.MI_OK) | (backBits != 0x10)):
+    if (status != self.MI_OK) or (backBits != 0x10):
       status = self.MI_ERR
 
-    return (status,backBits)
+    return (status, backBits)
 
 
   def MFRC522_Anticoll(self):

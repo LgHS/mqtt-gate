@@ -6,24 +6,33 @@ The gate's code requires python 3.
 
 Generating the proto file:
 ```bash
+apt install protobuf-compiler
 protoc --python_out=. --proto_path=.. ../gate.proto
 ```
 
 
 Installing the required stuff
 ```bash
-python -m virtualenv -p python3 .
+apt install python3-venv
+python3 -m venv [--prompt gate-py] .venv
 source ./bin/activate
 pip install -r requirements
 
-cp uids.py.dist uids.py
+cp config.py.dist config.py
 # don't forget to update it
 
 python gate.py
 ```
 
 
-## Deployement through gingerbread (LGHS specific)
+## Configuration of the client
+
+* Check the content of the `config.py` file
+* Add the user to the spi group to allow it to access the card reader (`sudo usermod -G spi -a pi`)
+* Add the user to the gpio group to allow it to access the gpio (`sudo usermod -G gpio -a pi`)
+
+
+## Deployment through gingerbread (LGHS specific)
 
 ```bash
 # Open the tunnel once

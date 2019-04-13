@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 
 import gate_pb2 as proto
 
+
 class MqttClient:
 
     def __init__(self, url, port, client_id, password, gate_id, tls=True):
@@ -34,7 +35,7 @@ class MqttClient:
         request.cardId = int.from_bytes(card_id, byteorder='big')
         request.tokenLow = int.from_bytes(token.bytes[:8], byteorder='big')
         request.tokenHigh = int.from_bytes(token.bytes[9:], byteorder='big')
-        request.pin = bytes() # doesn't even have a pin pad...
+        request.pin = bytes()  # doesn't even have a pin pad...
 
         data = request.SerializeToString()
         self.client.publish("lghs/gate/{0}/open/request".format(self.gate_id), data)

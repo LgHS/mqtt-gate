@@ -1,5 +1,5 @@
-OPi.GPIO==0.3.2
--e git+https://github.com/lthiery/SPI-Py.git#egg=spi-pi
-paho-mqtt==1.3.1
-protobuf==3.6.0
-six==1.11.0
+OPi.GPIO==0.3.6
+-e git+https://github.com/lthiery/SPI-Py.git@b76196d80d9932467998b0163f76c38fb8df45a9#egg=SPI_Py
+paho-mqtt==1.4.0
+protobuf==3.7.1
+six==1.12.0
