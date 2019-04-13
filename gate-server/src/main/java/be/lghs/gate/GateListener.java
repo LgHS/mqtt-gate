@@ -25,6 +25,7 @@ public class GateListener {
     private static Path firstExisting(Path... paths) throws NoSuchFileException {
         for (Path path : paths) {
             if (Files.exists(path)) {
+                log.debug("loading path {}", path);
                 return path;
             }
         }
@@ -35,6 +36,7 @@ public class GateListener {
     private final String server;
     private final String clientId;
     private final String clientPassword;
+    private final String topic;
     private final MqttClient mqttClient;
     private final Map<Long, String> users;
 
@@ -45,9 +47,10 @@ public class GateListener {
             Paths.get(System.getProperty("user.home"), "mqtt.properties"),
             Paths.get("/etc", "mqtt", "mqtt.properties")
         )));
-        server = config.getProperty("server.url");
-        clientId = config.getProperty("server.clientId");
-        clientPassword = config.getProperty("server.password");
+        server = config.getProperty("gate-server.mqtt.url");
+        clientId = config.getProperty("gate-server.mqtt.client-id");
+        clientPassword = config.getProperty("gate-server.mqtt.password");
+        topic = config.getProperty("gate-server.mqtt.topic");
 
         users = new HashMap<>();
         for (Map.Entry<Object, Object> entry : config.entrySet()) {
@@ -99,6 +102,7 @@ public class GateListener {
                 new MqttMessage(response.toByteArray()));
         }, e -> log.error("unexpected error", e)));
 
-        mqttClient.subscribe("lghs/gate/+/open/request");
+        log.debug("subscribing to topic {}", topic);
+        mqttClient.subscribe(topic);
     }
 }

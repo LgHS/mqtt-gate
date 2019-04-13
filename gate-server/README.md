@@ -7,10 +7,10 @@ APPLICATION_DIRECTORY=/opt/gate-server
 JAR_FILE=/tmp/gate-server.jar
 SERVICE_FILE=/tmp/gate-server.service
 
-mkdir -p "$APPLICATION_DIRECTORY"
+mkdir -p "$APPLICATION_DIRECTORY/data"
 cd "$APPLICATION_DIRECTORY"
 
-useradd --home-dir "$APPLICATION_DIRECTORY" \
+useradd --home-dir "$APPLICATION_DIRECTORY/data" \
         --system \
         --shell /sbin/nologin \
         gate-server
