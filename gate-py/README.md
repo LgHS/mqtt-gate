@@ -42,3 +42,28 @@ ssh -fNL 8022:gate-internal.lghs.space:22 gingerbread
 scp -P8022 *.py root@localhost:/root/OrangePiZeroMFRC522/MFRC522-python/ \
     && ssh -p8022 root@localhost systemctl restart gate
 ```
+
+
+
+
+## Wiegand
+
+The [`wiegand.py`](wiegand.py) file allows reading data from a wiegand device, but it only allows reading half the id of the card.
+It could be used inside the space to identify members on restricted equipment, but colisions make it a last resort tool.
+
+That program requires pigpiod which can be installed using the following commands
+
+```bash
+sudo apt install python3
+
+python3 -m venv -p python3 .venv
+source .venv/bin/activate
+pip install pigpio
+
+mkdir libs
+cd libs
+git clone https://github.com/joan2937/pigpio.git
+cd pigpio
+make
+sudo LD_LIBRARY_PATH=. ./pigpiod # should be started as a service if the thing becomes permanent
+```
