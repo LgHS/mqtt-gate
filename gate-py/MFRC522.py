@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import OPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import spi
-import signal
-import time
 
 class MFRC522:
   MAX_LEN = 16
@@ -105,15 +103,12 @@ class MFRC522:
 
   serNum = []
 
-  def __init__(self, device='/dev/spidev1.0', speed=1000000, gpio_pin=22):
+  def __init__(self, device='/dev/spidev1.0', speed=1000000):
     self.device = spi.openSPI(device=device, speed=speed)
-    GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(gpio_pin, GPIO.OUT)
-    GPIO.output(gpio_pin, 1)
     self.MFRC522_Init()
 
   def MFRC522_Init(self):
-    self.MFRC522_Reset();
+    self.MFRC522_Reset()
 
     self.Write_MFRC522(self.TModeReg, 0x8D)
     self.Write_MFRC522(self.TPrescalerReg, 0x3E)

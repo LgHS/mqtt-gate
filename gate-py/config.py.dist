@@ -4,9 +4,18 @@ server = {
     'password': '',
     'tls': True,
     'gate-id': 1,
+    'client-id': 'gate-1'
+}
+
+door = {
+    'gpio-pin': 17
+}
+
+led = {
+    'bcm-pin': 18,
+    'led-count': 14,
 }
 
 rfid = {
-    'spi-device': '/dev/spidev1.0',
-    'gpio-pin': 22
+    'spi-device': '/dev/spidev0.1',
 }

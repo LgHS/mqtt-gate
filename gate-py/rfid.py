@@ -7,8 +7,8 @@ class ShutdownRequest(Exception):
 
 
 class RfidReader:
-    def __init__(self, spi_device, gpio_pin):
-        self.mifare_reader = MFRC522.MFRC522(device=spi_device, gpio_pin=gpio_pin)
+    def __init__(self, spi_device):
+        self.mifare_reader = MFRC522.MFRC522(device=spi_device)
         self.enabled = True
         self.last_session_end = 0
 

@@ -2,12 +2,9 @@
 # -*- coding: utf8 -*-
 
 import time
-import OPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import MFRC522
 import signal
-import json
-
-import uids
 
 continue_reading = True
 

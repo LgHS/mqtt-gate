@@ -1,5 +1,15 @@
 # Gate Py
 
+
+## Hardware
+
++ Raspberry pi 3 (remember to switch the RPi.GPIO lib if switching the board)
++ Neopixel ring WS2812B
++ RFID reader RC522 (gotta enable SPI using `dt_param`/`dt_overlat` in `/boot/config.txt`)
++ Relay to open the door
+
+
+
 ## Setup
 
 The gate's code requires python 3.
