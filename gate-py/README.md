@@ -20,26 +20,31 @@ apt install protobuf-compiler
 protoc --python_out=. --proto_path=.. ../gate.proto
 ```
 
-
-Installing the required stuff
+Setting up the pi (we went with a `Raspbian GNU/Linux 9 (stretch)`) as root:
 ```bash
 apt install python3-venv
+
+useradd --system --user-group --home-dir /opt/gate-py --create-home --shell /sbin/nologin gate-py
+usermod -G spi -a gate-py
+usermod -G gpio -a gate-py
+
+cd /opt/gate-py
 python3 -m venv [--prompt gate-py] .venv
-source ./bin/activate
-pip install -r requirements
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# copy the files to the directory
+
+cp etc/gate.service /etc/systemd/system/gate-py.service
+systemctl daemon-reload
+systemctl enable gate-py
+systemctl start gate-py
 
 cp config.py.dist config.py
+chmod o-r config.py
+chgrp gate-py config.py
 # don't forget to update it
-
-python gate.py
 ```
-
-
-## Configuration of the client
-
-* Check the content of the `config.py` file
-* Add the user to the spi group to allow it to access the card reader (`sudo usermod -G spi -a pi`)
-* Add the user to the gpio group to allow it to access the gpio (`sudo usermod -G gpio -a pi`)
 
 
 ## Deployment through gingerbread (LGHS specific)
