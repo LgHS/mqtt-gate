@@ -1,6 +1,9 @@
 # Gate Py
 
 
+![a picture of the system](picture.jpg)
+
+
 ## Hardware
 
 + Raspberry pi 3 (remember to switch the RPi.GPIO lib if switching the board)
