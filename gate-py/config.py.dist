@@ -8,7 +8,8 @@ server = {
 }
 
 door = {
-    'gpio-pin': 17
+    'gpio-pin': 17,
+    'open-delay-seconds': 1,
 }
 
 led = {

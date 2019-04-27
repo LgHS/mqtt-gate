@@ -66,7 +66,7 @@ if __name__ == '__main__':
         print(payload)
         if payload.ok:
             door.unlock()
-            time.sleep(2)
+            time.sleep(config.door['open-delay-seconds'])
             door.lock()
 
     while reader.enabled:
