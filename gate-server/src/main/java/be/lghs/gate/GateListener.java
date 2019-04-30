@@ -1,10 +1,8 @@
 package be.lghs.gate;
 
-import be.lghs.gate.proto.Gate;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,37 +70,9 @@ public class GateListener {
         connectOptions.setUserName(clientId);
         connectOptions.setPassword(clientPassword.toCharArray());
         connectOptions.setAutomaticReconnect(true);
+        connectOptions.setCleanSession(true);
+
+        mqttClient.setCallback(new Callback(mqttClient, topic, users));
         mqttClient.connect(connectOptions);
-
-        mqttClient.setCallback(Callback.from((topic, message) -> {
-            // FIXME No token handling yet
-            if (!topic.equals("lghs/gate/1/open/request")) {
-                // TODO The logic is not the same for the internal and external gate
-            }
-
-            Gate.GateOpenRequest request = Gate.GateOpenRequest.parseFrom(message.getPayload());
-            Gate.GateOpenResponse response;
-            String user;
-            if ((user = users.get(request.getCardId())) == null) {
-                response = Gate.GateOpenResponse.newBuilder()
-                    .setCardId(request.getCardId())
-                    .setOk(false)
-                    .build();
-            } else {
-                log.info("'{}' getting in ({})", user, topic);
-
-                response = Gate.GateOpenResponse.newBuilder()
-                    .setCardId(request.getCardId())
-                    .setOk(true)
-                    .build();
-            }
-
-            mqttClient.publish(
-                topic.replace("request", "response"),
-                new MqttMessage(response.toByteArray()));
-        }, e -> log.error("unexpected error", e)));
-
-        log.debug("subscribing to topic {}", topic);
-        mqttClient.subscribe(topic);
     }
 }
