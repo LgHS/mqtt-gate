@@ -29,23 +29,6 @@ def read_card(card, door, mqtt):
 
     uid_bytes = bytes(card.uid)
     data = card.read_sector(1)
-    # the_guy_token = the_guy['token']
-    # if the_guy_token is None:
-    #     if data != [0]*16:
-    #         print('no token but data on card, skipping. %s' % data)
-    #         return
-
-    #     print('generating new token')
-    #     new_token = uuid.uuid4()
-
-    #     print('writing to card: %s' % new_token.bytes)
-    #     status = card.write_sector(1, new_token.bytes)
-    #     print('status: %d' % status)
-    #     the_guy['token'] = new_token.bytes
-
-    # elif the_guy_token != bytes(data):
-    #     print('invalid token: %s' % data)
-    #     return
 
     mqtt.door_open_request(uid_bytes, uuid.UUID(bytes=bytes(data)))
 
