@@ -58,6 +58,7 @@ public class Callback implements MqttCallbackExtended {
             response = Gate.GateOpenResponse.newBuilder()
                 .setCardId(request.getCardId())
                 .setOk(true)
+                .setUsername(user)
                 .build();
         }
 

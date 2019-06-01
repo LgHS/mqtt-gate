@@ -14,4 +14,5 @@ message GateOpenRequest {
 message GateOpenResponse {
     uint64 cardId = 1;
     bool ok = 2;
+    string username = 3;
 }
