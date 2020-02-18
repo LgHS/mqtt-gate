@@ -13,12 +13,12 @@ public class Callback implements MqttCallbackExtended {
 
     private final MqttClient mqttClient;
     private final String topic;
-    private final Map<Long, String> users;
+    private final Configuration configuration;
 
-    public Callback(MqttClient mqttClient, String topic, Map<Long, String> users) {
+    public Callback(MqttClient mqttClient, String topic, Configuration configuration) {
         this.mqttClient = mqttClient;
         this.topic = topic;
-        this.users = users;
+        this.configuration = configuration;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class Callback implements MqttCallbackExtended {
         Gate.GateOpenRequest request = Gate.GateOpenRequest.parseFrom(message.getPayload());
         Gate.GateOpenResponse response;
         String user;
-        if ((user = users.get(request.getCardId())) == null) {
+        if ((user = configuration.getUser(request.getCardId())) == null) {
             log.warn("unknown card id '{}'", request.getCardId());
             response = Gate.GateOpenResponse.newBuilder()
                 .setCardId(request.getCardId())

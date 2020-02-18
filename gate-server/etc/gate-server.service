@@ -9,6 +9,9 @@ User=gate-server
 Group=gate-server
 Type=simple
 ExecStart=/opt/java -jar /opt/gate-server/gate-server.jar
+ExecReload=/bin/kill -HUP $MAINPID
+; On some systems, kill is in /usr/bin
+;ExecReload=/usr/bin/kill -HUP $MAINPID
 RestartSec=5
 Restart=on-failure
 PrivateTmp=yes
