@@ -12,20 +12,18 @@ public class Callback implements MqttCallbackExtended {
     private static final Logger log = LoggerFactory.getLogger(GateListener.class);
 
     private final MqttClient mqttClient;
-    private final String topic;
     private final Configuration configuration;
 
-    public Callback(MqttClient mqttClient, String topic, Configuration configuration) {
+    public Callback(MqttClient mqttClient, Configuration configuration) {
         this.mqttClient = mqttClient;
-        this.topic = topic;
         this.configuration = configuration;
     }
 
     @Override
     public void connectComplete(boolean reconnect, String serverURI) {
-        log.debug("subscribing to topic {}", topic);
+        log.debug("subscribing to topic {}", configuration.getRequestTopic());
         try {
-            mqttClient.subscribe(topic);
+            mqttClient.subscribe(configuration.getRequestTopic());
         } catch (MqttException e) {
             throw new RuntimeException(e);
         }
@@ -38,8 +36,9 @@ public class Callback implements MqttCallbackExtended {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
+        String gateId = extractGateId(topic);
         // FIXME No token handling yet
-        if (!topic.equals("lghs/gate/1/open/request")) {
+        if (!gateId.equals("1")) {
             // TODO The logic is not the same for the internal and external gate
         }
 
@@ -63,12 +62,19 @@ public class Callback implements MqttCallbackExtended {
         }
 
         mqttClient.publish(
-            topic.replace("request", "response"),
+            configuration.getResponseTopic(gateId),
             new MqttMessage(response.toByteArray()));
+    }
+
+    private String extractGateId(String topic) {
+        String requestTopic = configuration.getRequestTopic();
+        int start = requestTopic.indexOf('+');
+        int end = requestTopic.length() - 1 - start;
+
+        return topic.substring(start, topic.length() - end);
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-
     }
 }

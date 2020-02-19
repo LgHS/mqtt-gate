@@ -10,9 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Configuration {
@@ -20,10 +22,9 @@ public class Configuration {
     private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
     private static final List<Path> CONFIG_FILES = List.of(
-            Paths.get("mqtt.properties"),
-            Paths.get(System.getProperty("user.home"), "mqtt.properties"),
-            Paths.get("/etc", "mqtt", "mqtt.properties")
-    );
+        Paths.get("mqtt.properties"),
+        Paths.get(System.getProperty("user.home"), "mqtt.properties"),
+        Paths.get("/etc", "gate-server", "mqtt.properties"));
 
     private interface LockReleasable extends AutoCloseable {
         @Override
@@ -41,34 +42,24 @@ public class Configuration {
     }
 
     private final Properties config;
-    public final String server;
-    public final String clientId;
-    public final String clientPassword;
-    public final String topic;
     private final Lock writeLock;
     private final Lock readLock;
-    private final Map<Long, String> users;
 
     public Configuration() {
-        config = new Properties();
-        try {
-            config.load(Files.newBufferedReader(firstExisting(CONFIG_FILES)));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Configuration file not found in any of " + CONFIG_FILES, e);
-        }
-        server = config.getProperty("gate-server.mqtt.url");
-        clientId = config.getProperty("gate-server.mqtt.client-id");
-        clientPassword = config.getProperty("gate-server.mqtt.password");
-        topic = config.getProperty("gate-server.mqtt.topic");
+        this.config = new Properties();
 
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         this.writeLock = lock.writeLock();
         this.readLock = lock.readLock();
-        users = new HashMap<>();
 
         reload();
 
         Signal.handle(new Signal("HUP"), signal -> reload());
+    }
+
+    private LockReleasable readLock() {
+        readLock.lock();
+        return readLock::unlock;
     }
 
     public void reload() {
@@ -80,24 +71,43 @@ public class Configuration {
             } catch (IOException e) {
                 throw new UncheckedIOException("Configuration file not found in any of " + CONFIG_FILES, e);
             }
+        }
+    }
 
-            users.clear();
-            for (Map.Entry<Object, Object> entry : config.entrySet()) {
-                int dotIndex;
-                String propertyName = (String) entry.getKey();
-                if ((dotIndex = propertyName.indexOf(".")) < 0 || !propertyName.substring(0, dotIndex).equals("card")) {
-                    continue;
-                }
+    public String getServer() {
+        try (LockReleasable handle = readLock()) {
+            return config.getProperty("gate-server.mqtt.url");
+        }
+    }
 
-                users.put(Long.parseUnsignedLong(propertyName.substring(dotIndex + 1)), (String) entry.getValue());
-            }
+    public String getClientId() {
+        try (LockReleasable handle = readLock()) {
+            return config.getProperty("gate-server.mqtt.client-id");
+        }
+    }
+
+    public String getClientPassword() {
+        try (LockReleasable handle = readLock()) {
+            return config.getProperty("gate-server.mqtt.password");
+        }
+    }
+
+    public String getRequestTopic() {
+        try (LockReleasable handle = readLock()) {
+            return config.getProperty("gate-server.mqtt.request-topic");
+        }
+    }
+
+    public String getResponseTopic(String gateId) {
+        try (LockReleasable handle = readLock()) {
+            return config.getProperty("gate-server.mqtt.response-topic")
+                .replace("{gate}", gateId);
         }
     }
 
     public String getUser(long cardId) {
-        readLock.lock();
-        try (LockReleasable handle = readLock::unlock) {
-            return users.get(cardId);
+        try (LockReleasable handle = readLock()) {
+            return config.getProperty("card." + cardId);
         }
     }
 }

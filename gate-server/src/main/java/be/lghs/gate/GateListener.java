@@ -11,21 +11,21 @@ public class GateListener {
     private final Configuration config;
     private final MqttClient mqttClient;
 
-    public GateListener() throws IOException, MqttException {
+    public GateListener() throws MqttException {
         config = new Configuration();
 
-        mqttClient = new MqttClient(config.server, config.clientId);
+        mqttClient = new MqttClient(config.getServer(), config.getClientId());
     }
 
     public void listen() throws MqttException {
         MqttConnectOptions connectOptions = new MqttConnectOptions();
-        connectOptions.setServerURIs(new String[] { config.server });
-        connectOptions.setUserName(config.clientId);
-        connectOptions.setPassword(config.clientPassword.toCharArray());
+        connectOptions.setServerURIs(new String[] { config.getServer() });
+        connectOptions.setUserName(config.getClientId());
+        connectOptions.setPassword(config.getClientPassword().toCharArray());
         connectOptions.setAutomaticReconnect(true);
         connectOptions.setCleanSession(true);
 
-        mqttClient.setCallback(new Callback(mqttClient, config.topic, config));
+        mqttClient.setCallback(new Callback(mqttClient, config));
         mqttClient.connect(connectOptions);
     }
 }
