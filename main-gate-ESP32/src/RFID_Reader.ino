@@ -1,21 +1,13 @@
 #include <SPI.h>
 #include <MFRC522.h>
-#include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 
-const int pinRST = 5;  // pin RST du module RC522
-const int pinSDA = 4; // pin SDA du module RC522
+#include "config.h"
+
 MFRC522 rfid(pinSDA, pinRST);
 
-const char* ssid = "SSID ";
-const char* password = "PASSWORD";
-const char* mqtt_server = "SERVER IP";
-const char* HostName = "ESP32_BADGE";
-const char* topic_BADGE = "lghs/porte/badge";
-const char* topic_RESP = "lghs/porte/resp";
-const char* mqttUser = "MQTTUSER";
-const char* mqttPassword = "MQTTPASSWORD";
-WiFiClient espClient;
+WiFiClientSecure espClient;
 PubSubClient client(espClient);
 
 void callback(String topic, byte* message, unsigned int length) {
@@ -72,7 +64,8 @@ void setup()
   rfid.PCD_Init();
   Serial.begin(115200);
   setup_wifi();
-  client.setServer(mqtt_server, 1883);
+
+  client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
   pinMode(27,OUTPUT);
   digitalWrite(27,HIGH);

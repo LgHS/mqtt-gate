@@ -1,0 +1,4 @@
+.pio/
+lib/
+
+config.h

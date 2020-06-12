@@ -1,0 +1,13 @@
+#define ssid ""
+#define password ""
+#define MQTT_SERVER ""
+#define MQTT_PORT 1883
+#define HostName ""
+#define topic_BADGE "lghs/gate/X/open/request"
+#define topic_RESP "lghs/gate/X/open/response"
+#define mqttUser "gate-X"
+#define mqttPassword ""
+
+
+#define pinRST 5  // pin RST du module RC522
+#define pinSDA 4 // pin SDA du module RC522
