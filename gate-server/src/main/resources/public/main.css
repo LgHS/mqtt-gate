@@ -1,0 +1,95 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    gap: 1ch;
+
+    padding: 0.5em 1ch;
+    margin-bottom: 1em;
+
+    background-color: #444444;
+    color: white;
+}
+
+.header a {
+    color: white;
+}
+
+.header h1 {
+    font-size: 1rem;
+    padding: 0;
+    margin: 0;
+}
+
+.header > .separator {
+    flex-grow: 1;
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+
+    text-align: center;
+}
+
+.dashboard .username {
+    font-size: 1.5em;
+}
+
+.dashboard .actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-around;
+    margin: 2em 0;
+    gap: 2em;
+}
+
+a.button {
+    display: inline-block;
+    background-color: #444;
+    color: white;
+    box-shadow: 1px 1px 2px #0008;
+    padding: 0.2em 0.5ch;
+    border: 1px solid black;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table th {
+    padding: 0 1ch;
+}
+
+table th:not(:last-child),
+table td:not(:last-child) {
+    border-right: 1px solid #999;
+}
+
+table th .filter {
+    display: inline-block;
+    padding: 0.1em 0.5ch;
+    color: white;
+    background-color: #666666;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+table th .filter.active {
+    background-color: black;
+}
+
+table tr:nth-child(2n) {
+    background-color: #eee;
+}
+
+table td {
+    border-top: 1px solid #ddd;
+    padding: 0.2em 1ch;
+}

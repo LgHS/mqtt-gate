@@ -1,0 +1,19 @@
+{% extends 'base' %}
+
+{% block "content" %}
+
+    <div style="display: flex; flex-direction: column; padding: 1em; gap: 1em;">
+        <a class="button">Trigger scan</a>
+        <textarea style="height: 10em">Connecting to server...
+Connecting to updater...
+Checking updater status...
+Updater is waiting for a card...</textarea>
+    </div>
+
+    <script type="module">
+        import Vue from 'https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.esm.browser.js';
+
+
+    </script>
+
+{% endblock %}

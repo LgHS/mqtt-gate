@@ -1,11 +1,8 @@
 package be.lghs.gate;
 
-import be.lghs.gate.proto.Gate;
 import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class Callback implements MqttCallbackExtended {
 
@@ -42,28 +39,29 @@ public class Callback implements MqttCallbackExtended {
             // TODO The logic is not the same for the internal and external gate
         }
 
-        Gate.GateOpenRequest request = Gate.GateOpenRequest.parseFrom(message.getPayload());
-        Gate.GateOpenResponse response;
-        String user;
-        if ((user = configuration.getUser(request.getCardId())) == null) {
-            log.warn("unknown card id '{}'", request.getCardId());
-            response = Gate.GateOpenResponse.newBuilder()
-                .setCardId(request.getCardId())
-                .setOk(false)
-                .build();
-        } else {
-            log.info("'{}' getting in ({})", user, topic);
-
-            response = Gate.GateOpenResponse.newBuilder()
-                .setCardId(request.getCardId())
-                .setOk(true)
-                .setUsername(user)
-                .build();
-        }
+        // Gate.GateOpenRequest request = Gate.GateOpenRequest.parseFrom(message.getPayload());
+        // Gate.GateOpenResponse response;
+        // String user;
+        // if ((user = configuration.getUser(request.getCardId())) == null) {
+        //     log.warn("unknown card id '{}'", request.getCardId());
+        //     response = Gate.GateOpenResponse.newBuilder()
+        //         .setCardId(request.getCardId())
+        //         .setOk(false)
+        //         .build();
+        // } else {
+        //     log.info("'{}' getting in ({})", user, topic);
+        //
+        //     response = Gate.GateOpenResponse.newBuilder()
+        //         .setCardId(request.getCardId())
+        //         .setOk(true)
+        //         .setUsername(user)
+        //         .build();
+        // }
 
         mqttClient.publish(
             configuration.getResponseTopic(gateId),
-            new MqttMessage(response.toByteArray()));
+            new MqttMessage("true".getBytes()));
+            // new MqttMessage(response.toByteArray()));
     }
 
     private String extractGateId(String topic) {

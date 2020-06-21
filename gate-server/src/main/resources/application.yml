@@ -1,0 +1,68 @@
+server:
+  port: 8081
+  error:
+    include-stacktrace: always
+    include-exception: true
+
+logging.config: classpath:logback-spring.xml
+
+lghs.gate-server:
+
+spring:
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:postgresql:lghs_gate_server
+    username: lghs_gate_server_app
+    password: 'change-me'
+
+  flyway:
+    url: ${spring.datasource.url}
+    user: lghs_gate_server_root
+    password: 'change-me'
+
+  security:
+    oauth2:
+      client:
+        provider:
+          members:
+            client-id: "${spring.security.oauth2.client.registration.members.client-id}"
+            authorization-uri: "https://members.lghs.be/oauth/authorize"
+            token-uri: "https://members.lghs.be/oauth/token"
+            user-info-uri: "https://members.lghs.be/api/me"
+            user-name-attribute: "username"
+        registration:
+          members:
+            client-id: "change-me"
+            client-secret: "change-me"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: "authorization_code"
+
+handlebars:
+  cache: false
+  resolver:
+    field: false
+    method: true # i.e. used to call signum on BigDecimal
+    java-bean: true
+    map: true
+  expose-spring-macro-helpers: false
+
+pebble:
+  cache: false
+  strict-variables: true
+  suffix: '.peb'
+
+---
+spring:
+  profiles: prd
+
+server.error:
+  include-stacktrace: never
+  include-exception: true
+
+handlebars:
+  cache: true
+
+pebble:
+  cache: true

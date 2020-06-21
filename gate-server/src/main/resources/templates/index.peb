@@ -1,0 +1,45 @@
+{# @pebvariable name="cards" type="org.jooq.Result<org.jooq.Record4<java.util.UUID, String, java.time.LocalDateTime, java.time.LocalDateTime>>" #}
+{% extends 'base' %}
+
+{% block "content" %}
+    <div class="dashboard">
+        <div>
+            Welcome <span class="username">{{ username }}</span>.
+        </div>
+
+        <div class="actions">
+
+            <div>
+                Register a <a href="{{ href('/cards/new') }}" class="button">new card</a>
+            </div>
+        
+            <table class="cards">
+                <thead>
+                <tr>
+                    <th>name</th>
+                    <th>last renew</th>
+                    <th>expiration</th>
+                    <th>actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for card in cards %}
+                    <tr>
+                        <td>{{ card.get("name") }}</td>
+                        <td>{{ card.get("last_renew") }}</td>
+                        <td>{{ card.get("expiration") }}</td>
+                        <td>
+                            <a href="{{ href("/cards/#{card.get("id")}/renew") }}" class="button">renew</a>
+                            <a href="{{ href("/cards/#{card.get("id")}/revoke") }}" class="button">revoke</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4">no data yet</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <link href="{{ href('/public/main.css') }}" rel="stylesheet">
+
+        <meta name="viewport" content="width=device-width">
+
+        <title>{% block "title" %}{% endblock %} | LgHS Compta</title>
+    </head>
+    <body>
+        {# please don't ask me, this is dumb... https://stackoverflow.com/a/57888310/2919551 #}
+        <script>0</script>
+        <header class="header">
+            <h1><a href="{{ href('/') }}">LgHS Gate Admin</a></h1>
+            <!--<span> > </span>
+            <h2><a href="">{% block "title" %}{% endblock %}</a></h2>-->
+            <div class="separator"></div>
+            <nav>
+                {% if not authenticated() %}
+                    <a href="{{ href('/oauth2/authorization/members') }}">Login</a>
+                {% endif %}
+            </nav>
+        </header>
+        <main>
+            {% block "content" %}{% endblock %}
+        </main>
+    </body>
+</html>
